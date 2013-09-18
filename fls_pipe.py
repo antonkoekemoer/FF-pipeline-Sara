@@ -6,7 +6,7 @@ exptime = 1307.0
 import wfcref
 
 ##GLOBAL IMPORTS##
-import glob,subprocess,os,drizzlepac
+import glob,subprocess,os,drizzlepac,shutil
 from astropy.io import fits
 import numpy as NP
 
@@ -16,8 +16,12 @@ def galign(working_direc):
     galign_direc=working_direc + '01.hst2galign'
     galign_exe='/internal/data1/frontier/software/selfcal/hst2galign.e'
 
-    #directory setup
-    os.mkdir(galign_direc)
+    #directory setup and change directory
+    if not os.path.exists(galign_direc): 
+        try:
+            os.mkdir(galign_direc)
+        except OSError as e:
+            print("Oops '{}'".format(e.strerror()))
 
     #run galign
     os.chdir(galign_direc)
@@ -38,10 +42,15 @@ def selfcal(working_direc):
     selfcal_exe='/internal/data1/frontier/software/selfcal/hst2selfcal.e'
 
     #directory setup
-    os.mkdir(selfcal_direc)
+    if not os.path.exists(selfcal_direc):
+        try:
+            os.mkdir(selfcal_direc)
+        except OSError as e:
+            print("Oops '{}'".format(e.strerror()))
+        
     filelistx=glob.glob(working_direc+'01.hst2galign/*xym*')
     for filex in filelistx:
-        subprocess.call(['cp',filex,selfcal_direc])
+        shutil.copy2(filex,selfcal_direc)
 
     #run selfcal
     os.chdir(selfcal_direc)
@@ -57,17 +66,25 @@ def selfcal(working_direc):
 
 
 # ######## Re-flag DQ array in temp prep file########
-def err_redo(working_direc,exptime):
+def final_fls(working_direc,exptime):
     fls_direc=working_direc + '03.finalfls'
     selfcal_dark=working_direc + '02.hst2selfcal/dark_bar.03.fits'
 
-    #directory setup
+    #directory setup, wipe directory if it already exists
+    if os.path.exists(fls_direc):
+        try:
+            shutil.rmtree(fls_direc)
+        except OSError as e:
+            print("Oops '{}'".format(e.strerror()))
+        #What other errros might come up?
+
     os.mkdir(fls_direc)
-    subprocess.call(['cp',selfcal_dark,fls_direc])
+
+    shutil.copy2(selfcal_dark,fls_direc)
     filelistc=glob.glob(working_direc+'*flc.fits')
     for filec in filelistc:
         new_fname=fls_direc + filec[-19:].replace('flc','fls')
-        subprocess.call(['cp',filec,new_fname])
+        shutil.copy2(filec,new_fname)
     
     #run final processing
     os.chdir(fls_direc)
@@ -76,7 +93,7 @@ def err_redo(working_direc,exptime):
         filelists=glob.glob('*fls.fits') 
         darkpp=fits.getval(filelists[0],'DARKFILE')[5:]
         darkpp_loc='/grp/hst/cdbs/jref/'+darkpp
-        subprocess.call(['cp',darkpp_loc,'.'])
+        shutil.copy2(darkpp_loc,'.')
 
         #zero out DQ array in dummy dark
         wfcref.zero_DQ_arrays(darkpp)
