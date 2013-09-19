@@ -66,7 +66,8 @@ def selfcal(working_direc):
 
 
 # ######## Re-flag DQ array in temp prep file########
-def final_fls(working_direc,exptime):
+def final_fls(working_direc):
+    exptime=1307.0
     fls_direc=working_direc + '03.finalfls'
     selfcal_dark=working_direc + '02.hst2selfcal/dark_bar.03.fits'
 
