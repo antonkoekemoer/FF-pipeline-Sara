@@ -13,13 +13,13 @@ from astropy.io import fits
 
 
 # ###### Run GALIGN #####   Assumes Input files are present, and correct
-def galign(working_direc):
+def galign(working_direc,ACSfilter):
     r"""Runs the first half of Jay's SelfCal scripts, does alignment
     of all images in folder.
 
     This function will take all the images in the working direcotry - 'working_direc'
     and runs them through the first half of Jay's codes, hst2galign.  The important
-    products from this scrpt that are needed for the next step are the .xym files. A
+    products from this scrpt that are needed for the next step are the .mat files. A
     folder named 01.hst2galign will be created in your working directory where hst2galign
     will be run.
 
@@ -28,6 +28,9 @@ def galign(working_direc):
     working_direc : string
         Working directory that contains the set of files you
         would like to process though hst2galign
+    ACSfilter : string
+        ACS filter of data in working_directory, case-insensitive
+        i.e.  "F814W" or "f775w"
 
     Raises
     ------
@@ -46,7 +49,7 @@ def galign(working_direc):
     Examples
     --------
     >>> import fls_pipe
-    >>> fls_pipe.galign('working_direc/')
+    >>> fls_pipe.galign('working_direc/','f814w')
     """
     
     #initial variable setup
@@ -68,8 +71,8 @@ def galign(working_direc):
     if os.getcwd() == galign_direc:
         inst=' "INST=ACSWFC"'
         expt=' "EXPT_0=1307.0"'
-        gcx=' "FILEGCX=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_F814W_gcx_SM4.fits"'
-        gcy=' "FILEGCY=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_F814W_gcy_SM4.fits"'
+        gcx=' "FILEGCX=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_'+ACSfilter.upper()+'_gcx_SM4.fits"'
+        gcy=' "FILEGCY=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_'+ACSfilter.upper()+'_gcy_SM4.fits"'
         flc=' ' + working_direc + 'j*flc.fits'
         exe_call=galign_exe+inst+expt+gcx+gcy+flc
         subprocess.call(exe_call,shell=True)
@@ -79,10 +82,10 @@ def galign(working_direc):
         print 'could not change directory to hst2galign directory'
 
 # ###### Run SELFCAL #####
-def selfcal(working_direc):
+def selfcal(working_direc,ACSfilter):
     r"""Runs the second half of Jay's SelfCal scripts, creates final delta_dark file.
 
-    This function will copy over the .xym files produced from hst2galign, run the
+    This function will copy over the .mat files produced from hst2galign, run the
     second half of Jay's code, hst2selfcal on the images in the working directory
     and runs them through the first half of Jay's codes, hst2galign.  The important
     products from this scrpt that are needed for the next step are the 
@@ -94,6 +97,9 @@ def selfcal(working_direc):
     working_direc : string
         Working directory that contains the set of files you
         would like to process though hst2selfcal
+    ACSfilter : string
+        ACS filter of data in working_directory, case insensitive
+        i.e.  "F814W" or "f775w"
 
     Raises
     ------
@@ -112,7 +118,7 @@ def selfcal(working_direc):
     Examples
     --------
     >>> import fls_pipe
-    >>> fls_pipe.selfcal('working_direc/')
+    >>> fls_pipe.selfcal('working_direc/','f814w')
     """
     
     #initial variable setup
@@ -126,7 +132,7 @@ def selfcal(working_direc):
         except OSError as e:
             print("Oops '{}'".format(e.strerror()))
         
-    filelistx=glob.glob(working_direc+'01.hst2galign/*xym*')
+    filelistx=glob.glob(working_direc+'01.hst2galign/*mat')
     for filex in filelistx:
         shutil.copy2(filex,selfcal_direc)
 
@@ -137,8 +143,8 @@ def selfcal(working_direc):
     os.chdir(selfcal_direc)
     if os.getcwd() == selfcal_direc:
         expt=' "EXPT_0=1307.0"'
-        gcx=' "FILEGCX=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_F814W_gcx_SM4.fits"'
-        gcy=' "FILEGCY=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_F814W_gcy_SM4.fits"'
+        gcx=' "FILEGCX=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_'+ACSfilter.upper()+'_gcx_SM4.fits"'
+        gcy=' "FILEGCY=/grp/webpages/jayander/GCLIB/ACS_WFC_SM4/wfc_'+ACSfilter.upper()+'_gcy_SM4.fits"'
         flc=' ' + working_direc + 'j*flc.fits'
         exe_call=selfcal_exe+expt+gcx+gcy+flc
         subprocess.call(exe_call,shell=True)
