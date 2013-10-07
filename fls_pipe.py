@@ -10,6 +10,7 @@ import wfcref
 ##GLOBAL IMPORTS##
 import glob,subprocess,os,drizzlepac,shutil
 from astropy.io import fits
+import numpy as NP
 
 
 # ###### Run GALIGN #####   Assumes Input files are present, and correct
@@ -235,10 +236,27 @@ def final_fls(working_direc):
 
         wfcref.hot_pixels(darkpp,'acs', do_warm=1, do_sat=1)
 
+        #record and clear out flag 256
+        darkpp_hdul=fits.open(darkpp)
+        mask1_chip2=NP.where(darkpp_hdul[3].data & 256, True, False)
+        mask1_chip1=NP.where(darkpp_hdul[6].data & 256, True, False)
+        darkpp_hdul.close()
+
+        drizzlepac.resetbits.reset_dq_bits(darkpp,256) 
+
         #Run deltadark subtraction, and DQ array correction
         dqnew_hdul=fits.open(darkpp)
         for files in filelists:
+            #record flag 256 from sci image
+            fls_hdul=fits.open(files)
+            mask2_chip2==NP.where(fls_hdul[3].data & 256, True, False)
+            mask2_chip1==NP.where(fls_hdul[6].data & 256, True, False)
+            fls_hdul.close()
+
+            #clearn out DQ flags from sci image
             drizzlepac.resetbits.reset_dq_bits(files,16+64+256)
+            
+            #add DQ flags from deltadark into sci DQ array
             fls_hdul=fits.open(files,mode='update')
             fls_expt=fls_hdul[0].header['EXPTIME']
     
@@ -247,6 +265,17 @@ def final_fls(working_direc):
     
             fls_hdul[3].data[:,:] += dqnew_hdul[3].data[:,:]
             fls_hdul[6].data[:,:] += dqnew_hdul[6].data[:,:]
+
+            #add back in DQ flag 256 from sci and deltadark frame, using array masks
+            finmask_chip2=mask1_chip2 | mask2_chip2
+            finmask_chip1=mask1_chip1 | mask2_chip1
+            Marray_chip2=NP.ma.array(NP.zeros((2048,4096)),mask=finmask_chip2,dtype=int)
+            Marray_chip1=NP.ma.array(NP.zeros((2048,4096)),mask=finmask_chip1,dtype=int)
+            DQ256_chip2=Marray_chip2.filled(fill_value=256)
+            DQ256_chip1=Marray_chip1.filled(fill_value=256)
+
+            fls_hdul[3].data[:,:] += DQ256_chip2[:,:]
+            fls_hdul[6].data[:,:] += DQ256_chip1[:,:]
     
             fls_hdul.close()
     
