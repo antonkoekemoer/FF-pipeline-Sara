@@ -249,8 +249,8 @@ def final_fls(working_direc):
         for files in filelists:
             #record flag 256 from sci image
             fls_hdul=fits.open(files)
-            mask2_chip2==NP.where(fls_hdul[3].data & 256, True, False)
-            mask2_chip1==NP.where(fls_hdul[6].data & 256, True, False)
+            mask2_chip2=NP.where(fls_hdul[3].data & 256, True, False)
+            mask2_chip1=NP.where(fls_hdul[6].data & 256, True, False)
             fls_hdul.close()
 
             #clearn out DQ flags from sci image
