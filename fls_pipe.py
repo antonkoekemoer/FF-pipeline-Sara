@@ -8,7 +8,7 @@ kind of change to the ERR arrays has yet to be done.
 import wfcref
 
 ##GLOBAL IMPORTS##
-import glob,subprocess,os,drizzlepac,shutil
+import glob,subprocess,os,drizzlepac,shutil,time
 from astropy.io import fits
 import numpy as NP
 
@@ -52,6 +52,9 @@ def galign(working_direc,ACSfilter):
     >>> import fls_pipe
     >>> fls_pipe.galign('working_direc/','f814w')
     """
+
+    #time test
+    start_time=time.time()
     
     #initial variable setup
     galign_direc=working_direc + '01.hst2galign'
@@ -81,6 +84,10 @@ def galign(working_direc,ACSfilter):
         os.chdir(starting_direc)
     else:
         print 'could not change directory to hst2galign directory'
+
+    #time test
+    end_time=time.time()
+    print(start_time-end_time,' seconds')
 
 # ###### Run SELFCAL #####
 def selfcal(working_direc,ACSfilter):
@@ -122,6 +129,9 @@ def selfcal(working_direc,ACSfilter):
     >>> fls_pipe.selfcal('working_direc/','f814w')
     """
     
+    #time test
+    start_time=time.time()
+
     #initial variable setup
     selfcal_direc=working_direc + '02.hst2selfcal'
     selfcal_exe='/internal/data1/frontier/software/selfcal/hst2selfcal.e'
@@ -154,6 +164,9 @@ def selfcal(working_direc,ACSfilter):
     else:
         print 'could not change directory'
 
+    #time test
+    end_time=time.time()
+    print(start_time-end_time,' seconds')
 
 # ######## Re-flag DQ array in temp prep file########
 def final_fls(working_direc):
@@ -190,6 +203,9 @@ def final_fls(working_direc):
     >>> import fls_pipe
     >>> fls_pipe.final_fls('working_direc/')
     """
+    
+    #time test
+    start_time=time.time()
 
     #initial variable setup
     exptime=1307.0
@@ -284,3 +300,7 @@ def final_fls(working_direc):
 
     print('finished succesfully!')
     os.chdir(starting_direc)
+
+    #time test
+    end_time=time.time()
+    print(start_time-end_time,' seconds')
