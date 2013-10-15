@@ -8,7 +8,7 @@ kind of change to the ERR arrays has yet to be done.
 import wfcref
 
 ##GLOBAL IMPORTS##
-import glob,subprocess,os,drizzlepac,shutil,time
+import glob,subprocess,os,drizzlepac,shutil,time,stat
 from astropy.io import fits
 import numpy as NP
 
@@ -63,7 +63,7 @@ def galign(working_direc,ACSfilter):
     #directory setup and change directory
     if not os.path.exists(galign_direc): 
         try:
-            os.mkdir(galign_direc)
+            os.mkdir(galign_direc,stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
         except OSError as e:
             print("Oops '{}'".format(e.strerror()))
     
@@ -80,14 +80,21 @@ def galign(working_direc,ACSfilter):
         flc=' ' + working_direc + 'j*flc.fits'
         exe_call=galign_exe+inst+expt+gcx+gcy+flc
         subprocess.call(exe_call,shell=True)
-        print('finished succesfully!')
+        print('finished succesfully!, changing permissions')
+        
+        #change permissions
+        CHlist=glob.glob('*')
+        for file in CHlist:
+            os.chmod(file,stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+        
+        #change back to original starting directory
         os.chdir(starting_direc)
     else:
         print 'could not change directory to hst2galign directory'
 
     #time test
     end_time=time.time()
-    print(start_time-end_time,' seconds')
+    print end_time-start_time,'seconds'
 
 # ###### Run SELFCAL #####
 def selfcal(working_direc,ACSfilter):
@@ -139,7 +146,7 @@ def selfcal(working_direc,ACSfilter):
     #directory setup
     if not os.path.exists(selfcal_direc):
         try:
-            os.mkdir(selfcal_direc)
+            os.mkdir(selfcal_direc,stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
         except OSError as e:
             print("Oops '{}'".format(e.strerror()))
         
@@ -160,13 +167,20 @@ def selfcal(working_direc,ACSfilter):
         exe_call=selfcal_exe+expt+gcx+gcy+flc
         subprocess.call(exe_call,shell=True)
         print('finished succesfully!')
+
+        #change permissions
+        CHlist=glob.glob('*')
+        for file in CHlist:
+            os.chmod(file,stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+
+        #change to original directory
         os.chdir(starting_direc)
     else:
         print 'could not change directory'
 
     #time test
     end_time=time.time()
-    print(start_time-end_time,' seconds')
+    print end_time-start_time,'seconds'
 
 # ######## Re-flag DQ array in temp prep file########
 def final_fls(working_direc):
@@ -223,7 +237,7 @@ def final_fls(working_direc):
             print("Oops '{}'".format(e.strerror()))
         #What other errros might come up?
 
-    os.mkdir(fls_direc)
+    os.mkdir(fls_direc,stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
 
     shutil.copy2(selfcal_dark,fls_direc)
     filelistc=glob.glob(working_direc+'*flc.fits')
@@ -298,9 +312,14 @@ def final_fls(working_direc):
         dqnew_hdul.close()
         delta_hdul.close()
 
-    print('finished succesfully!')
-    os.chdir(starting_direc)
+        #change permissions
+        CHlist=glob.glob('*')
+        for file in CHlist:
+            os.chmod(file,stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+
+        print('finished succesfully!')
+        os.chdir(starting_direc)
 
     #time test
     end_time=time.time()
-    print(start_time-end_time,' seconds')
+    print end_time-start_time,'seconds'
